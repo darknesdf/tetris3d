@@ -7,6 +7,7 @@ on:
 jobs:
   android:
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     container:
       image: barichello/godot-ci:4.2.1
     steps:
@@ -16,9 +17,9 @@ jobs:
           HOME: /root
         run: |
           mkdir -v -p build
-          godot --headless --verbose --import || true
-          godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk 2>&1 | tee export.log
-          test -f build/tetris3d.apk || { grep -iE "error|fail|not found|invalid" export.log | head -20; exit 1; }
+          timeout 180 godot --headless --verbose --editor --quit 2>&1 | tail -30 || true
+          timeout 600 godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk 2>&1 | tee export.log || true
+          test -f build/tetris3d.apk || { echo "=== APK TIDAK TERBUAT ==="; tail -40 export.log; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: tetris3d-apk
