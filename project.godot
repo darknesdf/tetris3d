@@ -18,5 +18,6 @@ window/stretch/aspect="expand"
 window/handheld/orientation=6
 
 [rendering]
+textures/vram_compression/import_etc2_astc=true
 
 renderer/rendering_method="forward_plus"
