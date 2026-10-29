@@ -17,9 +17,18 @@ jobs:
           HOME: /root
         run: |
           mkdir -v -p build
-          timeout 180 godot --headless --verbose --editor --quit 2>&1 | tail -30 || true
+          echo "== settings =="
+          find /root/.config/godot -name 'editor_settings*' -exec grep -iE "android|java|keystore" {} \;
+          echo "== files =="
+          ls -la /root/debug.keystore /usr/lib/android-sdk 2>&1 | head -20
+          ls /root/.local/share/godot/export_templates/*/ 2>&1 | head -30
+          java -version 2>&1
+          printf 'keystore/debug="/root/debug.keystore"\nkeystore/debug_user="androiddebugkey"\nkeystore/debug_password="android"\n' >> export_presets.cfg
+          timeout 180 godot --headless --import 2>&1 | tail -5 || true
           timeout 600 godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk 2>&1 | tee export.log || true
-          test -f build/tetris3d.apk || { echo "=== APK TIDAK TERBUAT ==="; tail -40 export.log; exit 1; }
+          echo "== error detail =="
+          grep -A6 "configuration errors" export.log | cat -A | head -30
+          test -f build/tetris3d.apk || { echo "=== APK TIDAK TERBUAT ==="; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: tetris3d-apk
