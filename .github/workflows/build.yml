@@ -4,9 +4,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  GODOT_VERSION: 4.2.1
-
 jobs:
   android:
     runs-on: ubuntu-22.04
@@ -14,15 +11,16 @@ jobs:
       image: barichello/godot-ci:4.2.1
     steps:
       - uses: actions/checkout@v4
-      - name: Setup template
-        run: |
-          mkdir -v -p ~/.local/share/godot/export_templates/
-          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
       - name: Export APK
+        env:
+          HOME: /root
         run: |
           mkdir -v -p build
-          godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk
+          godot --headless --verbose --import || true
+          godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk 2>&1 | tee export.log
+          test -f build/tetris3d.apk || { grep -iE "error|fail|not found|invalid" export.log | head -20; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: tetris3d-apk
           path: build
+          if-no-files-found: error
