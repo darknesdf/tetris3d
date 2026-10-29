@@ -1,0 +1,28 @@
+name: build-apk
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.2.1
+
+jobs:
+  android:
+    runs-on: ubuntu-22.04
+    container:
+      image: barichello/godot-ci:4.2.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup template
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates/
+          mv /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Export APK
+        run: |
+          mkdir -v -p build
+          godot --headless --verbose --export-debug "Android Debug" build/tetris3d.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tetris3d-apk
+          path: build
